@@ -1,0 +1,60 @@
+.card-img-top{
+    max-width: 30%; 
+    margin:90px;
+    height:20%;
+}
+.card{
+    height: 100%;
+box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    text-align: center;}
+
+
+    .router-body {
+        padding: 10px; /* Adjust padding */
+        height: 150vh;
+        background: #f5f5f5;
+        margin: 0; /* Reset margin */
+      }
+
+      .router-inn-body {
+        justify-content: center;
+        height: 50%;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        background-color: #fff;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        margin: 40px; /* Adjust margin */
+      }
+     /* Default light mode */
+.card {
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.bg-dark {
+  background-color: #343a40 !important;
+}
+
+.text-light {
+  color: #f8f9fa !important;
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+}
+
+.text-dark {
+  color: #343a40 !important;
+}
+
+/* Dark mode overrides */
+body.dark-mode .card {
+  background-color: #343a40;
+  color: #f8f9fa;
+}
+
+body.dark-mode .list-group-item {
+  background-color: #343a40;
+  color: #f8f9fa;
+}

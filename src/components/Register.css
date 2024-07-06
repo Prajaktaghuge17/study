@@ -1,0 +1,7 @@
+.d-grid{
+    margin: 10%;
+}
+
+.field level error{
+    color: red;
+}

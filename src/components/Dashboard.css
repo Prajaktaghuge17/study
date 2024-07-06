@@ -1,0 +1,34 @@
+/* Default light mode */
+.card {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .table-light {
+    background-color: white;
+    color: black;
+  }
+  
+  /* Dark mode */
+  .bg-dark .card {
+    background-color: #343a40;
+    color: white;
+  }
+  
+  .table-dark {
+    background-color: #343a40;
+    color: white;
+  }
+  
+  /* Alerts */
+  .visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+  }
+  
+  .invisible {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.5s, opacity 0.5s ease-in-out;
+  }
+  
