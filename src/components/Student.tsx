@@ -45,17 +45,6 @@ const fetchStudyMaterials = async () => {
   return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StudyMaterial[];
 };
 
-const groupByTitle = (materials: StudyMaterial[]) => {
-  return materials.reduce((acc: Record<string, StudyMaterial[]>, material) => {
-    const titleKey = material.title.toLowerCase();
-    if (acc[titleKey]) {
-      acc[titleKey].push(material);
-    } else {
-      acc[titleKey] = [material];
-    }
-    return acc;
-  }, {});
-};
 
 const handleSaveMaterial = async (user: User | null, material: StudyMaterial, setAlertVisible: (visible: boolean) => void) => {
   try {
@@ -80,7 +69,7 @@ const handleSaveMaterial = async (user: User | null, material: StudyMaterial, se
 
 const Student: React.FC<StudentProps> = ({ user }) => {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
-  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [] = useState<string | null>(null);
   const [alertVisible, setAlertVisible] = useState(false);
   const [searchAlertVisible, setSearchAlertVisible] = useState(false);
   const [searchedMaterials, setSearchedMaterials] = useState<StudyMaterial[]>([]);
@@ -102,7 +91,7 @@ const Student: React.FC<StudentProps> = ({ user }) => {
     fetchUser();
   }, [user]);
 
-  const { data: studyMaterials, isLoading: isMaterialsLoading, error: materialsError } = useQuery({
+  const { data: studyMaterials } = useQuery({
     queryKey: ['studyMaterials'],
     queryFn: fetchStudyMaterials,
     staleTime: 60000,
@@ -112,11 +101,7 @@ const Student: React.FC<StudentProps> = ({ user }) => {
   const userRole = userDetails ? userDetails.role : '';
   const userEmail = user ? user.email : 'Loading...';
 
-  const groupedMaterials = groupByTitle(studyMaterials || []);
 
-  const handleTitleClick = (title: string) => {
-    setSelectedTitle(selectedTitle === title ? null : title);
-  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);

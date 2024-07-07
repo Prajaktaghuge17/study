@@ -25,7 +25,7 @@ const AttemptQuizzes: React.FC<QuizProps> = ({user,userDetails}) => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [currentQuizIndex, setCurrentQuizIndex] = useState<number>(0);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
+  const [, setCorrectAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [questionTimer, setQuestionTimer] = useState<number>(60);

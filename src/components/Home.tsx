@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import quizzesImage from './quiz.png';
 import NavBar from './Navbar';
 
@@ -32,9 +32,9 @@ const Home: React.FC<HomeProps>= () => {
   const [user, setUser] = useState< User | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [needsDetails, setNeedsDetails] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [] = useState<string>('');
   const [savedMaterials, setSavedMaterials] = useState<string[]>([]);
-  const [filteredMaterials, setFilteredMaterials] = useState<StudyMaterial[]>([]);
+  const [filteredMaterials] = useState<StudyMaterial[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
@@ -118,9 +118,6 @@ const Home: React.FC<HomeProps>= () => {
     }
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
 
   const handleSaveMaterial = async (materialId: string) => {
     try {
@@ -156,17 +153,6 @@ const Home: React.FC<HomeProps>= () => {
     }
   };
 
-  const handleSearchSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      const q = query(collection(db, 'studyMaterials'), where('title', '==', searchQuery));
-      const querySnapshot = await getDocs(q);
-      const materials = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StudyMaterial[];
-      setFilteredMaterials(materials);
-    } catch (error) {
-      console.error('Error searching materials:', error);
-    }
-  };
 
   if (loading) {
     return (

@@ -20,7 +20,7 @@ interface UserDetails {
 const Quizzes: React.FC<Props>= ({user,userDetails}) => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
-  const [isTeacher, setIsTeacher] = useState<boolean>(true);
+  const [isTeacher] = useState<boolean>(true);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
   const [showStudentMarks, setShowStudentMarks] = useState<boolean>(false); // State to manage visibility of student marks

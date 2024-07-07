@@ -38,12 +38,6 @@ const NavBar: React.FC<NavBarProps> = ({ user, userDetails, showUserDetails }) =
     setShowDetails(prev => !prev);
   }, []);
 
-  const handleTeacherClick = useCallback((e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-    if (userDetails?.role === 'student') {
-      e.preventDefault();
-      alert('Students do not have access to the teacher portal.');
-    }
-  }, [userDetails]);
 
   const userDetailsContent = useMemo(() => {
     if (showDetails && showUserDetails && userDetails) {
