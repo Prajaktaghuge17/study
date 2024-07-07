@@ -47,7 +47,10 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
       if (editingQuiz) {
         onUpdateQuiz(editingQuiz.id, { question, options, correctAnswer });
       } else {
-        onAddQuiz({ question, options, correctAnswer });
+        onAddQuiz({
+          question, options, correctAnswer,
+          id: ''
+        });
       }
       handleClose();
     }

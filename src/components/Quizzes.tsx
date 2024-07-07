@@ -7,8 +7,17 @@ import NavBar from './Navbar';
 import { Container, Table, Button } from 'react-bootstrap';
 import { useTheme } from './ThemeContext'; // Import useTheme
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-const Quizzes: React.FC = () => {
+import { User } from 'firebase/auth';
+interface Props {
+  user: User | null;
+  userDetails: UserDetails | null;
+}
+interface UserDetails {
+  name: string;
+  age: number;
+  role: string;
+}
+const Quizzes: React.FC<Props>= ({user,userDetails}) => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
   const [isTeacher, setIsTeacher] = useState<boolean>(true);
@@ -81,7 +90,7 @@ const Quizzes: React.FC = () => {
 
   return (
     <div className={isDarkMode ? 'bg-dark text-light' : 'bg-light text-dark'}>
-      <NavBar user={null} userDetails={null} showUserDetails={true} />
+      <NavBar user={user} userDetails={userDetails} showUserDetails={true} />
       <Container className="mt-4">
         <h2 className="mt-5 mb-4">Quizzes</h2>
         {isTeacher && (

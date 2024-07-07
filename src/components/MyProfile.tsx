@@ -8,9 +8,10 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from './ThemeContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { User } from 'firebase/auth';
 
 interface MyProfileProps {
-  user: firebase.User | null;
+  user: User | null;
   userDetails: UserDetails | null;
 }
 
@@ -25,6 +26,7 @@ interface StudyMaterial {
   title: string;
   description: string;
   url: string;
+  userId: string;
 }
 
 const MyProfile: React.FC<MyProfileProps> = ({ user, userDetails }) => {
@@ -42,7 +44,10 @@ const MyProfile: React.FC<MyProfileProps> = ({ user, userDetails }) => {
           const querySnapshot = await getDocs(q);
           const materials = querySnapshot.docs.map(doc => ({
             id: doc.id,
-            ...doc.data() as StudyMaterial
+            title: doc.data().title,
+            description: doc.data().description,
+            url: doc.data().url,
+            userId: doc.data().userId,
           }));
           setSavedMaterials(materials);
           setLoading(false);

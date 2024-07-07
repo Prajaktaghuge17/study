@@ -1,28 +1,23 @@
-//npm install bootstrap @popperjs/core
-
-import '../main';
 import React, { useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import Logo from './l1.png';
 import Profile from './profile1.png';
 import { auth } from './firebase';
-import { signOut } from 'firebase/auth';
-import { User } from 'firebase/auth';
-
+import { signOut, User } from 'firebase/auth';
 import { useTheme } from './ThemeContext';
 
 interface NavBarProps {
   user: User | null;
-  userDetails: UserDetails | null;
   showUserDetails: boolean;
+  userDetails: {
+    name: string;
+    role: string;
+    age: number;
+  } | null;
 }
 
-interface UserDetails {
-  name: string;
-  age: number;
-  role: string;
-}
+
 
 const NavBar: React.FC<NavBarProps> = ({ user, userDetails, showUserDetails }) => {
   const navigate = useNavigate();

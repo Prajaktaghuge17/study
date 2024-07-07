@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from './firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import quizzesImage from './quiz.png';
 import NavBar from './Navbar';
-import firebase from 'firebase/compat/app';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './Home.css';
 import { useTheme } from './ThemeContext';
 
 interface UserDetails {
+  savedMaterials: any;
   name: string;
   age: number;
   role: string;
@@ -23,9 +24,12 @@ interface StudyMaterial {
   url: string;
   teacherId: string;
 }
+interface HomeProps {
+  user: User | null;
+}
 
-const Home: React.FC = () => {
-  const [user, setUser] = useState<firebase.User | null>(null);
+const Home: React.FC<HomeProps>= () => {
+  const [user, setUser] = useState< User | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [needsDetails, setNeedsDetails] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -143,7 +147,7 @@ const Home: React.FC = () => {
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         const userData = userDoc.data() as UserDetails;
-        const updatedSavedMaterials = userData.savedMaterials.filter(id => id !== materialId);
+        const updatedSavedMaterials = userData.savedMaterials.filter((id: string) => id !== materialId);
         await setDoc(userDocRef, { savedMaterials: updatedSavedMaterials }, { merge: true });
         setSavedMaterials(updatedSavedMaterials);
       }

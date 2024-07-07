@@ -9,9 +9,12 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import './Dashboard.css';
 import { useTheme } from './ThemeContext';
 
+import { User } from 'firebase/auth';
+
 interface UserDetails {
   name: string;
   role: string;
+  age: number;
 }
 
 interface StudyMaterial {
@@ -23,7 +26,7 @@ interface StudyMaterial {
 }
 
 interface StudentProps {
-  user: firebase.User | null;
+  user: User | null;
 }
 
 const fetchUserDetails = async (userId: string) => {
@@ -54,7 +57,7 @@ const groupByTitle = (materials: StudyMaterial[]) => {
   }, {});
 };
 
-const handleSaveMaterial = async (user: firebase.User | null, material: StudyMaterial, setAlertVisible: (visible: boolean) => void) => {
+const handleSaveMaterial = async (user: User | null, material: StudyMaterial, setAlertVisible: (visible: boolean) => void) => {
   try {
     // Add the material to the 'savedMaterials' collection
     await addDoc(collection(db, 'savedMaterials'), {
@@ -102,7 +105,6 @@ const Student: React.FC<StudentProps> = ({ user }) => {
   const { data: studyMaterials, isLoading: isMaterialsLoading, error: materialsError } = useQuery({
     queryKey: ['studyMaterials'],
     queryFn: fetchStudyMaterials,
-    onError: (error:any) => console.error('Error fetching study materials:', error),
     staleTime: 60000,
   });
 

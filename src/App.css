@@ -66,3 +66,7 @@ body > .container {
   bottom: 0;
   width: 100%;
 }
+iframe
+{
+    display: none;
+}
