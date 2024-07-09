@@ -40,50 +40,47 @@ const Home: React.FC<HomeProps>= () => {
   const [loading, setLoading] = useState<boolean>(true);
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        console.log('User logged in:', currentUser);
-        setUser(currentUser);
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-          console.log('User document does not exist. Prompting for details.');
-          setNeedsDetails(true);
-        } else {
-          const userData = userDoc.data() as UserDetails;
-          setUserDetails(userData);
-          setNeedsDetails(false);
-        }
-        setLoading(false);
+  const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    if (currentUser) {
+      console.log('User logged in:', currentUser);
+      setUser(currentUser);
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        console.log('User document does not exist. Prompting for details.');
+        setNeedsDetails(true);
       } else {
-        console.log('No user logged in. Redirecting to login.');
-        setUser(null);
-        setLoading(false);
-        navigate('/login');
+        const userData = userDoc.data() as UserDetails;
+        setUserDetails(userData);
+        setNeedsDetails(false);
       }
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
-
+      setLoading(false);
+    } else {
+      console.log('No user logged in. Redirecting to login.');
+      setUser(null);
+      setLoading(false);
+      navigate('/login');
+    }
+  });
   useEffect(() => {
-    const fetchSavedMaterials = async () => {
-      try {
-        if (user) {
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            const userData = userDoc.data() as UserDetails;
-            const savedMaterialIds = userData.savedMaterials || [];
-            setSavedMaterials(savedMaterialIds);
-          }
+     return () => unsubscribe();
+  }, [navigate]);
+  const fetchSavedMaterials = async () => {
+    try {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as UserDetails;
+          const savedMaterialIds = userData.savedMaterials || [];
+          setSavedMaterials(savedMaterialIds);
         }
-      } catch (error) {
-        console.error('Error fetching saved materials:', error);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching saved materials:', error);
+    }
+  };
+  useEffect(() => {
 
     fetchSavedMaterials();
   }, [user]);
