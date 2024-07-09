@@ -15,6 +15,8 @@ interface UserDetails {
   name: string;
   age: number;
   role: string;
+  firstName: string;
+  gender: string;
 }
 
 interface StudyMaterial {
@@ -102,6 +104,8 @@ const Home: React.FC<HomeProps>= () => {
         age: parseInt(age.value),
         role: role.value,
         savedMaterials: [],
+        firstName: '',
+        gender: ''
       };
       await setDoc(doc(db, 'users', user.uid), userData);
       console.log('User details saved successfully.');

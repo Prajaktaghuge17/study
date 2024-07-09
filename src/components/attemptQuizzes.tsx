@@ -18,6 +18,7 @@ interface UserDetails {
   name: string;
   age: number;
   role: string;
+  
 }
 
 

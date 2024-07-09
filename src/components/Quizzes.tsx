@@ -5,26 +5,29 @@ import QuizFormModal from './QuizFormModal';
 import { Quiz, QuizAttempt } from './types';
 import NavBar from './Navbar';
 import { Container, Table, Button } from 'react-bootstrap';
-import { useTheme } from './ThemeContext'; // Import useTheme
+import { useTheme } from './ThemeContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { User } from 'firebase/auth';
+
 interface Props {
   user: User | null;
   userDetails: UserDetails | null;
 }
+
 interface UserDetails {
   name: string;
   age: number;
   role: string;
 }
-const Quizzes: React.FC<Props>= ({user,userDetails}) => {
+
+const Quizzes: React.FC<Props> = ({ user, userDetails }) => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
   const [isTeacher] = useState<boolean>(true);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
-  const [showStudentMarks, setShowStudentMarks] = useState<boolean>(false); // State to manage visibility of student marks
-  const { isDarkMode } = useTheme(); // Use the isDarkMode state from ThemeContext
+  const [showStudentMarks, setShowStudentMarks] = useState<boolean>(false);
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     fetchQuizzesFromFirestore();
@@ -51,36 +54,36 @@ const Quizzes: React.FC<Props>= ({user,userDetails}) => {
 
   const handleAddQuiz = async (quiz: Omit<Quiz, 'id'>) => {
     try {
-      const quizId = await addQuiz(quiz);
-      setQuizzes(prevQuizzes => [...prevQuizzes, { id: quizId, ...quiz }]);
+      await addQuiz(quiz);
+      fetchQuizzesFromFirestore(); // Refresh quizzes after adding
+      setShowModal(false); // Close modal after adding quiz
     } catch (error) {
       console.error('Error adding quiz: ', error);
     }
   };
 
-  const handleUpdateQuiz = async (quizId: string, quiz: Partial<Quiz>) => {
+  const handleUpdateQuiz = async (id: string, quizData: Partial<Quiz>) => {
     try {
-      await updateQuiz(quizId, quiz);
-      setQuizzes(prevQuizzes =>
-        prevQuizzes.map(q => (q.id === quizId ? { ...q, ...quiz } : q))
-      );
+      await updateQuiz(id, quizData);
+      fetchQuizzesFromFirestore(); // Refresh quizzes after updating
+      setShowModal(false); // Close modal after updating quiz
     } catch (error) {
       console.error('Error updating quiz: ', error);
-    }
-  };
-
-  const handleDeleteQuiz = async (quizId: string) => {
-    try {
-      await deleteQuiz(quizId);
-      setQuizzes(prevQuizzes => prevQuizzes.filter(q => q.id !== quizId));
-    } catch (error) {
-      console.error('Error deleting quiz: ', error);
     }
   };
 
   const handleEditQuiz = (quiz: Quiz) => {
     setEditingQuiz(quiz);
     setShowModal(true);
+  };
+
+  const handleDeleteQuiz = async (id: string) => {
+    try {
+      await deleteQuiz(id);
+      setQuizzes((prevQuizzes) => prevQuizzes.filter((quiz) => quiz.id !== id));
+    } catch (error) {
+      console.error('Error deleting quiz: ', error);
+    }
   };
 
   const handleCloseModal = () => {
@@ -95,7 +98,9 @@ const Quizzes: React.FC<Props>= ({user,userDetails}) => {
         <h2 className="mt-5 mb-4">Quizzes</h2>
         {isTeacher && (
           <div className="text-right mb-3">
-            <Button variant="primary" onClick={() => setShowModal(true)}>Add Quiz</Button>
+            <Button variant="primary" onClick={() => setShowModal(true)}>
+              Add Quiz
+            </Button>
           </div>
         )}
         <QuizFormModal
@@ -104,7 +109,6 @@ const Quizzes: React.FC<Props>= ({user,userDetails}) => {
           onAddQuiz={handleAddQuiz}
           onUpdateQuiz={handleUpdateQuiz}
           editingQuiz={editingQuiz}
-          
         />
         <Table striped bordered hover className={isDarkMode ? 'table-dark' : 'table-light'}>
           <thead>
@@ -118,23 +122,30 @@ const Quizzes: React.FC<Props>= ({user,userDetails}) => {
           </thead>
           <tbody>
             {quizzes.map((quiz, index) => (
-              <tr key={quiz.id}>
+              <tr key={quiz.id || `quiz-${index}`}>
                 <td>{index + 1}</td>
                 <td>{quiz.question}</td>
                 <td>
                   <ul>
                     {quiz.options.map((option, idx) => (
-                      <li key={idx}>{option}</li>
+                      <li key={`quiz-${quiz.id}-option-${idx}`}>{option}</li>
                     ))}
                   </ul>
                 </td>
                 <td>{quiz.correctAnswer}</td>
                 {isTeacher && (
                   <td>
-                    <Button variant="outline-success" onClick={() => handleEditQuiz(quiz)}>
+                    <Button
+                      variant="outline-success"
+                      onClick={() => handleEditQuiz(quiz)}
+                      className="mr-2"
+                    >
                       <FaEdit /> Edit
-                    </Button>{' '}
-                    <Button variant="outline-danger" onClick={() => handleDeleteQuiz(quiz.id)}>
+                    </Button>
+                    <Button
+                      variant="outline-danger"
+                      onClick={() => handleDeleteQuiz(quiz.id)}
+                    >
                       <FaTrash /> Delete
                     </Button>
                   </td>
@@ -143,7 +154,6 @@ const Quizzes: React.FC<Props>= ({user,userDetails}) => {
             ))}
           </tbody>
         </Table>
-
         {isTeacher && (
           <>
             <Button

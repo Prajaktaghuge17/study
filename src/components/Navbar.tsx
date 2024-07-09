@@ -17,8 +17,6 @@ interface NavBarProps {
   } | null;
 }
 
-
-
 const NavBar: React.FC<NavBarProps> = ({ user, userDetails, showUserDetails }) => {
   const navigate = useNavigate();
   const [showDetails, setShowDetails] = useState(false);
@@ -37,7 +35,6 @@ const NavBar: React.FC<NavBarProps> = ({ user, userDetails, showUserDetails }) =
   const toggleDetails = useCallback(() => {
     setShowDetails(prev => !prev);
   }, []);
-
 
   const userDetailsContent = useMemo(() => {
     if (showDetails && showUserDetails && userDetails) {
@@ -60,9 +57,10 @@ const NavBar: React.FC<NavBarProps> = ({ user, userDetails, showUserDetails }) =
           <img id='img1' src={Logo} alt="Logo" />
         </Link>
         <div className="d-flex align-items-center d-lg-none">
-          <button className="btn btn-secondary me-2" onClick={toggleTheme}>
-            {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-          </button>
+          <div className="form-check form-switch me-2">
+            <input className="form-check-input" type="checkbox" id="themeSwitch" checked={isDarkMode} onChange={toggleTheme} />
+            <label className="form-check-label" htmlFor="themeSwitch">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</label>
+          </div>
           {user && (
             <div className="user-info">
               <img id='img2' src={Profile} alt="Profile" onClick={toggleDetails} />
@@ -105,9 +103,10 @@ const NavBar: React.FC<NavBarProps> = ({ user, userDetails, showUserDetails }) =
             )}
           </ul>
           <div className="d-flex align-items-center">
-            <button className="btn btn-secondary me-2 d-none d-lg-block" onClick={toggleTheme}>
-              {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-            </button>
+            <div className="form-check form-switch me-2 d-none d-lg-block">
+              <input className="form-check-input" type="checkbox" id="themeSwitch" checked={isDarkMode} onChange={toggleTheme} />
+              <label className="form-check-label" htmlFor="themeSwitch">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</label>
+            </div>
             {user && (
               <div className="user-info d-none d-lg-flex">
                 <img id='img2' src={Profile} alt="Profile" onClick={toggleDetails} />

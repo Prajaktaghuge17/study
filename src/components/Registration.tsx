@@ -62,7 +62,7 @@ const Registration: React.FC = () => {
           <form className="mt-5 p-4 border rounded shadow" onSubmit={handleSubmit(onSubmit)}>
             <h2 className="mb-4 text-center">Register</h2>
             <div className="mb-3">
-              <label htmlFor="email" className="form-label">Email</label>
+           <label>Email</label>
               <input
                 type="email"
                 className="form-control"

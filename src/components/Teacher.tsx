@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,7 @@ import './Dashboard.css';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 import { useTheme } from './ThemeContext';
-import '../App.css';
+
 import { User } from 'firebase/auth';
 
 interface UserDetails {
@@ -33,40 +33,6 @@ interface TeacherProps {
   user: User | null;
 }
 
-const fetchUserDetails = async (userId: string) => {
-  const userDocRef = doc(db, 'users', userId);
-  const docSnap = await getDoc(userDocRef);
-  if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as unknown as UserDetails;
-  } else {
-    throw new Error('No such document!');
-  }
-};
-
-const fetchStudyMaterials = async (userId: string) => {
-  const q = query(collection(db, 'study'), where('userId', '==', userId));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StudyMaterial[];
-};
-
-const addStudyMaterial = async (newMaterial: Partial<StudyMaterial>, userId: string) => {
-  const docRef = await addDoc(collection(db, 'study'), { ...newMaterial, userId });
-  return { id: docRef.id, ...newMaterial, userId };
-};
-
-const updateStudyMaterial = async (material: StudyMaterial) => {
-  const { id, ...data } = material;
-  const docRef = doc(db, 'study', id);
-  await updateDoc(docRef, data);
-  return material;
-};
-
-const deleteStudyMaterial = async (id: string) => {
-  const docRef = doc(db, 'study', id);
-  await deleteDoc(docRef);
-  return id;
-};
-
 const Teacher: React.FC<TeacherProps> = ({ user }) => {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [studyMaterial, setStudyMaterial] = useState<Partial<StudyMaterial>>({
@@ -83,20 +49,54 @@ const Teacher: React.FC<TeacherProps> = ({ user }) => {
   const [showEditSuccessAlert, setShowEditSuccessAlert] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode } = useTheme(); // Assuming useTheme provides toggleDarkMode function
+
+  const fetchUserDetails = async (userId: string) => {
+    const userDocRef = doc(db, 'users', userId);
+    const docSnap = await getDoc(userDocRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as unknown as UserDetails;
+    } else {
+      throw new Error('No such document!');
+    }
+  };
+
+  const fetchStudyMaterials = async (userId: string) => {
+    const q = query(collection(db, 'study'), where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StudyMaterial[];
+  };
+
+  const addStudyMaterial = async (newMaterial: Partial<StudyMaterial>, userId: string) => {
+    const docRef = await addDoc(collection(db, 'study'), { ...newMaterial, userId });
+    return { id: docRef.id, ...newMaterial, userId };
+  };
+
+  const updateStudyMaterial = async (material: StudyMaterial) => {
+    const { id, ...data } = material;
+    const docRef = doc(db, 'study', id);
+    await updateDoc(docRef, data);
+    return material;
+  };
+
+  const deleteStudyMaterial = async (id: string) => {
+    const docRef = doc(db, 'study', id);
+    await deleteDoc(docRef);
+    return id;
+  };
+
+  const fetchUser = async () => {
+    if (user && user.uid) {
+      try {
+        const userDetails = await fetchUserDetails(user.uid);
+        setUserDetails(userDetails);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (user && user.uid) {
-        try {
-          const userDetails = await fetchUserDetails(user.uid);
-          setUserDetails(userDetails);
-        } catch (error) {
-          console.error('Error fetching user details:', error);
-        }
-      }
-    };
-
     fetchUser();
   }, [user]);
 
@@ -156,6 +156,10 @@ const Teacher: React.FC<TeacherProps> = ({ user }) => {
     }
   }, [userDetails, navigate]);
 
+  const memoizedUserName = useMemo(() => userDetails ? userDetails.name : 'Loading...', [userDetails]);
+  const memoizedUserRole = useMemo(() => userDetails ? userDetails.role : '', [userDetails]);
+  const memoizedUserEmail = useMemo(() => user ? user.email : 'Loading...', [user]);
+
   const handleAddStudyMaterial = () => {
     if (editingMaterialId) {
       updateMutation.mutate({ id: editingMaterialId, ...studyMaterial } as StudyMaterial);
@@ -198,10 +202,6 @@ const Teacher: React.FC<TeacherProps> = ({ user }) => {
     setStudyMaterial({ ...studyMaterial, [name]: value });
   };
 
-  const userName = userDetails ? userDetails.name : 'Loading...';
-  const userRole = userDetails ? userDetails.role : '';
-  const userEmail = user ? user.email : 'Loading...';
-
   if (!userDetails || isMaterialsLoading) {
     return (
       <div className="d-flex justify-content-center mt-4">
@@ -224,123 +224,121 @@ const Teacher: React.FC<TeacherProps> = ({ user }) => {
           <Col md={8}>
             <div className="card">
               <div className="card-header">
-                <h5 className="card-title">Welcome, {userName} ({userRole})</h5>
-                <p className="card-text">{userEmail}</p>
+                <h5 className="card-title">Welcome, {memoizedUserName} ({memoizedUserRole})</h5>
+                <p className="card-text">{memoizedUserEmail}</p>
                 <Button variant="primary" onClick={toggleAddForm}>
-                  {showAddForm ? 'Close' : 'Add Study Material'}
-                </Button>
-                <Button variant="secondary" onClick={toggleTableVisibility} className="ms-2">
-                  {showTable ? 'Hide Table' : 'Show Table'}
+                  {showAddForm ? 'Cancel' : 'Add Study Material'}
                 </Button>
               </div>
               <div className="card-body">
-                {showAddForm && (
-                  <Modal show={showAddForm} onHide={toggleAddForm} centered>
-                    <Modal.Header closeButton>
-                      <Modal.Title>{editingMaterialId ? 'Edit Study Material' : 'Add Study Material'}</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                      <Form>
-                        <Form.Group controlId="title">
-                          <Form.Label>Title</Form.Label>
-                          <Form.Control
-                            type="text"
-                            name="title"
-                            value={studyMaterial.title}
-                            onChange={handleChange}
-                            required
-                          />
-                        </Form.Group>
-                        <Form.Group controlId="description">
-                          <Form.Label>Description</Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            rows={3}
-                            name="description"
-                            value={studyMaterial.description}
-                            onChange={handleChange}
-                            required
-                          />
-                        </Form.Group>
-                        <Form.Group controlId="url">
-                          <Form.Label>URL</Form.Label>
-                          <Form.Control
-                            type="url"
-                            name="url"
-                            value={studyMaterial.url}
-                            onChange={handleChange}
-                            required
-                          />
-                        </Form.Group>
-                      </Form>
-                    </Modal.Body>
-                    <Modal.Footer>
-                      <Button variant="secondary" onClick={toggleAddForm}>
-                        Cancel
-                      </Button>
-                      <Button variant="primary" onClick={handleAddStudyMaterial}>
-                        {editingMaterialId ? 'Update' : 'Add'}
-                      </Button>
-                    </Modal.Footer>
-                  </Modal>
+                {showSuccessAlert && (
+                  <Alert variant="success" onClose={() => setShowSuccessAlert(false)} dismissible>
+                    Study material deleted successfully!
+                  </Alert>
                 )}
-                <Alert show={showSuccessAlert} variant="success">
-                  Study Material {editingMaterialId ? 'Updated' : 'Added'} successfully!
-                </Alert>
-                <Alert show={showEditSuccessAlert} variant="success">
-                  Study Material Updated successfully!
-                </Alert>
-                <div className="table-responsive">
-                  {showTable && (
-                    <table className={`table mt-3 ${isDarkMode ? 'table-dark' : ''}`}>
-                      <thead>
-                        <tr>
-                          <th>Title</th>
-                          <th>Description</th>
-                          <th>URL</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {studyMaterials.map((material) => (
-                          <tr key={material.id}>
-                            <td>{material.title}</td>
-                            <td>{material.description}</td>
-                            <td>{material.url}</td>
-                            <td>
-                              <Button variant="outline-primary" size="sm" onClick={() => handleEdit(material)}>
-                                <i className="fas fa-edit"></i>
-                              </Button>{' '}
-                              <Button variant="outline-danger" size="sm" onClick={() => handleDelete(material.id)}>
-                                <i className="fas fa-trash-alt"></i>
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-                <Alert show={showConfirmModal} variant="danger">
-                  <Alert.Heading>Delete Study Material</Alert.Heading>
-                  <p>Are you sure you want to delete this study material?</p>
-                  <div className="d-flex justify-content-end">
-                    <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
-                      Cancel
+                {showEditSuccessAlert && (
+                  <Alert variant="success" onClose={() => setShowEditSuccessAlert(false)} dismissible>
+                    Study material updated successfully!
+                  </Alert>
+                )}
+                {showAddForm ? (
+                  <Form>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Title</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="title"
+                        value={studyMaterial.title || ''}
+                        onChange={handleChange}
+                        required
+                      />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Description</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        name="description"
+                        value={studyMaterial.description || ''}
+                        onChange={handleChange}
+                        required
+                      />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Label>URL</Form.Label>
+                      <Form.Control
+                        type="url"
+                        name="url"
+                        value={studyMaterial.url || ''}
+                        onChange={handleChange}
+                        required
+                      />
+                    </Form.Group>
+                    <Button variant="primary" onClick={handleAddStudyMaterial}>
+                      {editingMaterialId ? 'Update' : 'Add'}
                     </Button>
-                    <Button variant="danger" onClick={confirmDelete} className="ms-2">
-                      Delete
+                  </Form>
+                ) : (
+                  <>
+                    <Button variant="secondary" onClick={toggleTableVisibility}>
+                      {showTable ? 'Hide Table' : 'Show Table'}
                     </Button>
-                  </div>
-                </Alert>
-                <div className="d-flex justify-content-center mt-3">
-                  {isMaterialsLoading && <Spinner animation="border" role="status" />}
-                </div>
+                    {showTable && (
+                      <div className="table-responsive mt-4">
+                        <table className={`table ${isDarkMode ? 'table-dark' : 'table-light'}`}>
+                          <thead>
+                            <tr>
+                              <th scope="col">Title</th>
+                              <th scope="col">Description</th>
+                              <th scope="col">URL</th>
+                              <th scope="col">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {studyMaterials.map((material) => (
+                              <tr key={material.id}>
+                                <td>{material.title}</td>
+                                <td>{material.description}</td>
+                                <td>
+                                  <a href={material.url} target="_blank" rel="noopener noreferrer">
+                                    {material.url}
+                                  </a>
+                                </td>
+                                <td>
+                                  <Button variant="warning" size="sm" onClick={() => handleEdit(material)}>
+                                    <i className="fas fa-edit"></i>
+                                  </Button>{' '}
+                                  <Button variant="danger" size="sm" onClick={() => handleDelete(material.id)}>
+                                    <i className="fas fa-trash"></i>
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </Col>
         </Row>
       </Container>
+      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to delete this study material?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

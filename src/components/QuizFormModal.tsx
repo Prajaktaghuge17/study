@@ -1,28 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-import { Omit } from 'react-bootstrap/esm/helpers';
 import { Quiz } from './types';
-import { useTheme } from './ThemeContext';
 
 interface QuizFormModalProps {
   show: boolean;
   handleClose: () => void;
   onAddQuiz: (quiz: Omit<Quiz, 'id'>) => void;
-  onUpdateQuiz: (quizId: string, quiz: Partial<Quiz>) => void;
+  onUpdateQuiz: (id: string, quiz: Partial<Quiz>) => void;
   editingQuiz: Quiz | null;
 }
 
-const QuizFormModal: React.FC<QuizFormModalProps> = ({
-  show,
-  handleClose,
-  onAddQuiz,
-  onUpdateQuiz,
-  editingQuiz,
-}) => {
-  const [question, setQuestion] = useState<string>('');
+const QuizFormModal: React.FC<QuizFormModalProps> = ({ show, handleClose, onAddQuiz, onUpdateQuiz, editingQuiz }) => {
+  const [question, setQuestion] = useState('');
   const [options, setOptions] = useState<string[]>(['', '', '', '']);
-  const [correctAnswer, setCorrectAnswer] = useState<string>('');
-  const { isDarkMode } = useTheme();
+  const [correctAnswer, setCorrectAnswer] = useState('');
+
   useEffect(() => {
     if (editingQuiz) {
       setQuestion(editingQuiz.question);
@@ -41,45 +33,40 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
     setOptions(newOptions);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (question && correctAnswer && options.every(option => option)) {
-      if (editingQuiz) {
-        onUpdateQuiz(editingQuiz.id, { question, options, correctAnswer });
-      } else {
-        onAddQuiz({
-          question, options, correctAnswer,
-          id: ''
-        });
-      }
-      handleClose();
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const newQuiz = { question, options, correctAnswer };
+
+    if (editingQuiz && editingQuiz.id) {
+      onUpdateQuiz(editingQuiz.id, newQuiz);
+    } else {
+      onAddQuiz(newQuiz);
     }
   };
 
   return (
-    <div  className={isDarkMode ? 'table-dark' : 'table-light'}>
     <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
-        <Modal.Title>{editingQuiz ? 'Edit Quiz' : 'Add New Quiz'}</Modal.Title>
+        <Modal.Title>{editingQuiz ? 'Edit Quiz' : 'Add Quiz'}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit}>
+        <Modal.Body>
           <Form.Group controlId="question">
             <Form.Label>Question</Form.Label>
             <Form.Control
               type="text"
               value={question}
-              onChange={e => setQuestion(e.target.value)}
+              onChange={(e) => setQuestion(e.target.value)}
               required
             />
           </Form.Group>
           {options.map((option, index) => (
-            <Form.Group controlId={`option${index}`} key={index}>
+            <Form.Group controlId={`option-${index}`} key={index}>
               <Form.Label>Option {index + 1}</Form.Label>
               <Form.Control
                 type="text"
                 value={option}
-                onChange={e => handleOptionChange(index, e.target.value)}
+                onChange={(e) => handleOptionChange(index, e.target.value)}
                 required
               />
             </Form.Group>
@@ -89,17 +76,21 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
             <Form.Control
               type="text"
               value={correctAnswer}
-              onChange={e => setCorrectAnswer(e.target.value)}
+              onChange={(e) => setCorrectAnswer(e.target.value)}
               required
             />
           </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
           <Button variant="primary" type="submit">
             {editingQuiz ? 'Update Quiz' : 'Add Quiz'}
           </Button>
-        </Form>
-      </Modal.Body>
+        </Modal.Footer>
+      </Form>
     </Modal>
-    </div>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { doc, getDoc, collection, query, getDocs, addDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +8,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './Dashboard.css';
 import { useTheme } from './ThemeContext';
-
 import { User } from 'firebase/auth';
 
 interface UserDetails {
@@ -45,10 +44,8 @@ const fetchStudyMaterials = async () => {
   return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StudyMaterial[];
 };
 
-
 const handleSaveMaterial = async (user: User | null, material: StudyMaterial, setAlertVisible: (visible: boolean) => void) => {
   try {
-    // Add the material to the 'savedMaterials' collection
     await addDoc(collection(db, 'savedMaterials'), {
       userId: user?.uid,
       title: material.title,
@@ -56,40 +53,39 @@ const handleSaveMaterial = async (user: User | null, material: StudyMaterial, se
       url: material.url,
     });
 
-    // Update the UI to reflect the saved material
     setAlertVisible(true);
     setTimeout(() => {
       setAlertVisible(false);
     }, 3000);
   } catch (error) {
     console.error('Error saving study material:', error);
-    // Handle error state or alert the user
   }
 };
 
 const Student: React.FC<StudentProps> = ({ user }) => {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
-  const [] = useState<string | null>(null);
   const [alertVisible, setAlertVisible] = useState(false);
   const [searchAlertVisible, setSearchAlertVisible] = useState(false);
   const [searchedMaterials, setSearchedMaterials] = useState<StudyMaterial[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { isDarkMode } = useTheme();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (user && user.uid) {
-        try {
-          const userDetails = await fetchUserDetails(user.uid);
-          setUserDetails(userDetails);
-        } catch (error) {
-          console.error('Error fetching user details:', error);
-        }
-      }
-    };
+  const userId = useMemo(() => user?.uid, [user]);
 
+  const fetchUser = async () => {
+    if (userId) {
+      try {
+        const userDetails = await fetchUserDetails(userId);
+        setUserDetails(userDetails);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    }
+  };
+
+  useEffect(() => {
     fetchUser();
-  }, [user]);
+  }, [userId]);
 
   const { data: studyMaterials } = useQuery({
     queryKey: ['studyMaterials'],
@@ -100,8 +96,6 @@ const Student: React.FC<StudentProps> = ({ user }) => {
   const userName = userDetails ? userDetails.name : 'Loading...';
   const userRole = userDetails ? userDetails.role : '';
   const userEmail = user ? user.email : 'Loading...';
-
-
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
